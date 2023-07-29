@@ -6,7 +6,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+
 	//"strconv"
+	"github.com/joho/godotenv"
 )
 
 type Odegaard struct {
@@ -31,6 +34,20 @@ type Odegaard struct {
 	} `json:"statistics"`
 }
 
+// use godot package to load/read the .env file and
+// return the value of the key
+func goDotEnvVariable(key string) string {
+
+	// load .env file
+	err := godotenv.Load(".env")
+
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	return os.Getenv(key)
+}
+
 func main() {
 	//10385450 - everton
 	//10385451 - brentford arsenal
@@ -42,7 +59,8 @@ func main() {
 	//var topStoryID string = strconv.Itoa(topStories[0])
 	req, _ := http.NewRequest("GET", url, nil)
 
-	req.Header.Add("X-RapidAPI-Key", "76a5c68254msh15c95aa5f37d156p1a408ajsn7bc8944039ed")
+	my_rapidAPIKey := goDotEnvVariable("my_rapidAPIkey")
+	req.Header.Add("X-RapidAPI-Key", my_rapidAPIKey)
 	req.Header.Add("X-RapidAPI-Host", "footapi7.p.rapidapi.com")
 
 	res, err := http.DefaultClient.Do(req)
@@ -61,11 +79,16 @@ func main() {
 
 	err2 := json.Unmarshal([]byte(bodyStr), &ode)
 
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
+	fmt.Println("Displaying stats for Martin Odegaard:")
 	fmt.Println("Accurate passes: ", ode.Statistics.AccuratePass)
 	fmt.Println("Total passes: ", ode.Statistics.TotalPass)
 
 	passAccuracy100 := (float32(ode.Statistics.AccuratePass) / float32(ode.Statistics.TotalPass))
 	fmt.Println("Pass accuracy: ", passAccuracy100)
-	fmt.Println("Error: ", err2)
+
 	fmt.Println("XG: ", ode.Statistics.XG)
 }
